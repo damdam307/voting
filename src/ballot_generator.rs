@@ -1,5 +1,19 @@
 use rand::prelude::*;
 
+/// Generates a ballot in the following way:
+/// A vector with all the indices of the electable candidates is shuffled
+/// At each step, with probability `tie_probability` the candidate i+1 has the 
+/// same preference rank as candidate i, otherwise it has rank of one more. Lower rank
+/// means that candidate is preferred over another, the first processed candidate has a rank of 0.
+/// At each step, with probability `incomplete_probability` the process stops and all unprocessed
+/// candidates get treated as unranked by that ballot.
+/// # Arguments
+/// * `candidate_number` - The number of electable candidates
+/// * `tie_probability` - The probability that two adjacent candidates have the same final rank
+/// * `incomplete_probability` - The probability of stopping at each step 
+/// # Returns
+/// A ballot: a double vector of integers. The vector at index i contains all candidates with 
+/// preference rank i
 fn create_ballot(candidate_number: usize, tie_probability: f64, incomplete_probability: f64) -> Vec<Vec<usize>>
 {
     let mut starting_order: Vec<usize> = (0..candidate_number).collect();
@@ -25,10 +39,18 @@ fn create_ballot(candidate_number: usize, tie_probability: f64, incomplete_proba
     return preferences;
 }
 
-pub fn create_n_ballots(number: usize, candidate_number: usize, tie_probability: f64, incomplete_probability: f64) -> Vec<Vec<Vec<usize>>>
+/// Randomly generates N ballots
+/// # Arguments
+/// * `voter_number` - The number of ballots to generate
+/// * `candidate_number` - The number of electable candidates
+/// * `tie_probability` - The probability that two candidates have the same rank (see create_ballot)
+/// * `incomplete_probability` - the probability that not all candidates have a rank (see create_ballot)
+/// # Returns
+/// A vector containing N ballots
+pub fn create_n_ballots(voter_number: usize, candidate_number: usize, tie_probability: f64, incomplete_probability: f64) -> Vec<Vec<Vec<usize>>>
 {
     let mut ballots: Vec<Vec<Vec<usize>>> = Vec::new();
-    for _i in 0..number
+    for _i in 0..voter_number
     {
         ballots.push(create_ballot(candidate_number, tie_probability, incomplete_probability));
     }

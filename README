@@ -1,0 +1,9 @@
+# Single Transferable Vote Implementation
+
+This repository has a simple implementation of the Single Transferable Vote system
+
+## Functions and Classes
+The `ballot_generator.rs` file implements `create_n_ballots`, that generates N ballots randomly according to the given parameters.
+
+
+
