@@ -1,4 +1,5 @@
 use rand::prelude::*;
+type Ballot = Vec<Vec<usize>>;
 
 /// Generates a ballot in the following way:
 /// A vector with all the indices of the electable candidates is shuffled
@@ -14,21 +15,23 @@ use rand::prelude::*;
 /// # Returns
 /// A ballot: a double vector of integers. The vector at index i contains all candidates with 
 /// preference rank i
-fn create_ballot(candidate_number: usize, tie_probability: f64, incomplete_probability: f64) -> Vec<Vec<usize>>
+fn create_ballot(candidate_number: usize, tie_probability: f64, incomplete_probability: f64) -> Ballot
 {
-    let mut starting_order: Vec<usize> = (0..candidate_number).collect();
     let mut rng = rand::rng();
+    
+    let mut starting_order: Vec<usize> = (0..candidate_number).collect();
+    let mut preferences: Ballot = Vec::new();
+    
     starting_order.shuffle(&mut rng);
-
-    let mut preferences: Vec<Vec<usize>> = Vec::new();
+    
     let mut add_new_el: bool = true;
-
     for candidate in starting_order 
     {
-        if preferences.is_empty() || add_new_el
+        if add_new_el
         {
             preferences.push(Vec::new());
         }
+
         preferences.last_mut().unwrap().push(candidate);
         add_new_el = rng.random_bool(1.0-tie_probability);
         if rng.random_bool(incomplete_probability)
@@ -50,6 +53,7 @@ fn create_ballot(candidate_number: usize, tie_probability: f64, incomplete_proba
 pub fn create_n_ballots(voter_number: usize, candidate_number: usize, tie_probability: f64, incomplete_probability: f64) -> Vec<Vec<Vec<usize>>>
 {
     let mut ballots: Vec<Vec<Vec<usize>>> = Vec::new();
+    
     for _i in 0..voter_number
     {
         ballots.push(create_ballot(candidate_number, tie_probability, incomplete_probability));
