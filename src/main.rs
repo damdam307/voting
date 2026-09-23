@@ -6,9 +6,9 @@ use voting_system::SingleTrasferableVote;
 use voting_system::ResultState;
 
 fn main() {
-    let candidates:usize = 10;
-    let voters:usize = 100;
-    let seats:usize = 3;
+    let candidates:usize = 500;
+    let voters:usize = 30000;
+    let seats:usize = 10;
 
     let mut election:SingleTrasferableVote = SingleTrasferableVote::new(
         create_n_ballots(
@@ -42,7 +42,7 @@ fn main() {
         );
         println!(
             "Would have been elected: {:?}",
-            election.results.highest_before_interruption
+            election.results.remaining_elected_candidates
         );
         println!(
             "Tied: {:?}",

@@ -17,7 +17,6 @@ pub struct ElectionResult
     pub result: ResultState,
     pub elected_candidates: Vec<usize>,
     pub remaining_elected_candidates: Vec<usize>,
-    pub highest_before_interruption: Vec<usize>,
     pub tied_at_interruption: Vec<usize>
 }
 
@@ -29,7 +28,6 @@ impl ElectionResult {
             result: ResultState::NotRunElection,
             elected_candidates: Vec::new(),
             remaining_elected_candidates: Vec::new(),
-            highest_before_interruption: Vec::new(),
             tied_at_interruption: Vec::new()
         }
     }
@@ -247,7 +245,7 @@ impl SingleTrasferableVote
                     {
                         if !self.is_out[candidate]
                         {
-                            self.results.highest_before_interruption.push(candidate);
+                            self.results.remaining_elected_candidates.push(candidate);
                         }
                     }
                     self.results.result=ResultState::StoppedBecauseOfTie;
