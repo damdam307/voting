@@ -2,7 +2,7 @@ mod ballot_generator;
 mod voting_system;
 
 use ballot_generator::create_n_ballots;
-use voting_system::SingleTrasferableVote;
+use voting_system::SingleTransferableVote;
 use voting_system::ResultState;
 
 fn main() {
@@ -10,7 +10,7 @@ fn main() {
     let voters:usize = 30000;
     let seats:usize = 10;
 
-    let mut election:SingleTrasferableVote = SingleTrasferableVote::new(
+    let mut election:SingleTransferableVote = SingleTransferableVote::new(
         create_n_ballots(
             voters, 
             candidates, 

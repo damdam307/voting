@@ -1,32 +1,42 @@
-# Single Transferable Vote Implementation
+# Single Transferable Vote implementation
 
-This repository has a simple implementation of the Single Transferable Vote system
+A simple Rust implementation of the Single Transferable Vote (STV) system.
 
-## How it works
-The algorithm works on ballots, vectors which at position i hold all the candidates of rank i.
+This repository provides a library and a small example program that run STV elections on a set of ballots.
 
-A single voter has a weight, that starts as 1 and "decays" depending on what fraction of the voter's vote has been used for elected candidates. E.g.: if candidate A gets elected with 150% of the threshold votes, each voter who elected them contributes 2/3 of their vote towards that candidate, and their weight gets multiplied by 1/3.
+---
 
-The weight also keeps track of ties: since multiple candidates can be tied in a ballot, each one of them gets an equal share of the vote if they are still in the race. E.g. if candidate A,B,C,D are tied, but B is out of the rac, each candidate gets 1/3 of the vote and the weight gets temporarily divided by three.
+## Overview of the algorithm
 
-At each step the algorithm works as follows:
-- Look for a candidate still in the race who has at least 1/(candidates to elect) of the votes and elect them.
-- If no one was found, find all of the candidates with the least number of votes and disqualify them.
-- In both cases, transfer the vote as follows:
-    - for elected candidates, calculate the fraction of surplus votes. Multiply the vote share of each elector by that fraction and then either redistribute it among the candidates tied with the just elected one or pass it to the next ranked candidates and subdivide it among them.
-    - for disqualified candidates, follow the same procedure but without decaying the vote. 
+Ballots are represented as ordered ranks: a ballot is a vector where each position contains the candidates at that rank.
 
-## Results
-The election can have three different outcomes:
-1. The election was run normally, in which case all the elected candidates have reaches the threshold
-2. Due to some voters not fully ranking all candidates, some vote shares become unused and thus not enough candidates are mathematically able to reach the threshold. In this case the election continues normally until the still running unelected candidates are in equal number as the unassigned seats. They get then marked as elected but with missing votes.
-3. At a certain point, disqualifying multiple tied candidates would have led to less candidated being in the race than the number of unassigned seats. The election gets interrupted, the candidates with higher votes than these last place tied ones get marked as elected with missing votes like in scenario 2. and all the tied candidated get returned too.
+Each voter has a weight that starts at 1. When part of a ballot contributes to electing a candidate, the voter's remaining weight decays to reflect how much of their vote is still available for subsequent transfers. Ties on a ballot are handled by equally splitting the weight among tied candidates that are still in the race.
 
+High-level step for each counting round:
+1. If any candidate has reached the election threshold (1 / seats_to_fill fraction of the total effective vote), elect them and transfer their surplus proportionally.
+2. If no candidate reaches the threshold, find the candidate(s) with the fewest votes and disqualify them (eliminate) and transfer their votes.
+3. Transfers: when redistributing, subdivide the transferred share across tied candidates on a ballot or pass it to the next-ranked candidates that are still running.
 
-## Functions and Classes
-The `ballot_generator.rs` file implements `create_n_ballots`, that generates N ballots randomly according to the given parameters.
-The `voting_systems.rs` file implements the `SingleTrasferableVote` class that holds data and runs the election. The results are then found in the public attribute `SingleTrasferableVote.results`, which has an instance of the `ElectionResult` class, structured as follows.
-- `result`: an enum which encodes which of the three previously explained scenarios was encountered, respectively with the values `EveryWinnerAtCutoff`,`SomeElectedUnderCutoff`,`StoppedBecauseOfTie`, or that the election was not run: `NotRunElection`.
-- `elected_candidates`: in every scenario holds all the candidates elected because they reached the threshold.
-- `remaining_elected_candidates`: in scenarios 2. and 3. holds the candidated that were still in the race at the end/interruption of the election but didn't reach the threshold.
-- `tied_at_interruption`: only in the third scenario, holds all the tied candidates with the least amount of votes that caused the election to stop.
+---
+
+## Possible outcomes
+
+The election result can be one of the following:
+
+1. Every winner at cutoff: the election completed normally and all elected candidates reached the threshold.
+2. Some elected under cutoff: because some voters did not rank enough candidates, some votes exhausted and not enough candidates could mathematically reach the threshold. In that case, when the number of remaining candidates equals the number of remaining seats, those candidates are marked elected (but with missing votes).
+3. Stopped because of tie: disqualifying all tied last-place candidates would reduce the number of running candidates below the number of seats; the process stops. Candidates with higher votes than the last-place tied candidates are elected (with missing votes) and the tied candidates that caused the interruption are returned as the tied set.
+
+---
+
+## important files
+
+- Ballot generation: [ballot_generator.rs](/home/Alessandro/Documents/rust/voting/src/ballot_generator.rs)
+- STV implementation: [voting_system.rs](/home/Alessandro/Documents/rust/voting/src/voting_system.rs)
+- Example entrypoint: [main.rs](/home/Alessandro/Documents/rust/voting/src/main.rs)
+
+Key result structure (returned by the STV implementation):
+- `result`: enum describing the election outcome. Values include `EveryWinnerAtCutoff`, `SomeElectedUnderCutoff`, `StoppedBecauseOfTie`, and `NotRunElection`.
+- `elected_candidates`: list of candidates elected by reaching the threshold.
+- `remaining_elected_candidates`: when the election stops early (scenarios 2 or 3), the candidates that were still in the race but did not reach the threshold.
+- `tied_at_interruption`: in the tie-interruption scenario, the set of tied candidates that caused the process to stop.

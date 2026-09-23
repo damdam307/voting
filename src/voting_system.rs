@@ -33,7 +33,7 @@ impl ElectionResult {
     }
 }
 
-pub struct SingleTrasferableVote
+pub struct SingleTransferableVote
 {
     pub ballots: Vec<Vec<Vec<usize>>>, 
     pub number_of_candidates: usize,
@@ -53,11 +53,11 @@ pub struct SingleTrasferableVote
     pub results: ElectionResult,
 }
 
-impl SingleTrasferableVote
+impl SingleTransferableVote
 {
     pub fn new(ballots: Vec<Ballot>,number_of_candidates: usize,number_of_votes: usize,candidates_to_elect:usize) -> Self
     {
-        return SingleTrasferableVote
+        return SingleTransferableVote
         {
             ballots: ballots,
             number_of_candidates: number_of_candidates,
