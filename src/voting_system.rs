@@ -1,7 +1,7 @@
 
 use std::collections::HashSet;
 use fraction::GenericFraction;
-type Frac = GenericFraction<i32>;
+type Frac = GenericFraction<i128>;
 type Ballot = Vec<Vec<usize>>;
 
 pub enum ResultState
@@ -40,14 +40,14 @@ pub struct SingleTransferableVote
     pub number_of_votes: usize,
     pub candidates_to_elect: usize,
     
-    cutoff: GenericFraction<i32>,
+    cutoff: Frac,
     
     is_voted_by: Vec<HashSet<usize>>,
     is_voting_for: Vec<HashSet<usize>>,
     indices: Vec<usize>,
     is_out: Vec<bool>,
-    weights: Vec<GenericFraction<i32>>,
-    total_votes: Vec<GenericFraction<i32>>,
+    weights: Vec<Frac>,
+    total_votes: Vec<Frac>,
     remaining_candidates: usize,
 
     pub results: ElectionResult,
@@ -93,7 +93,7 @@ impl SingleTransferableVote
             self.is_voting_for[voter].remove(&candidate);
             if !self.is_voting_for[voter].is_empty()
             {
-                let split:Frac = Frac::new(self.is_voting_for[voter].len() as i32,1);
+                let split:Frac = Frac::new(self.is_voting_for[voter].len() as i128, 1);
                 let profiting_candidates: Vec<usize> =
                     self.is_voting_for[voter].iter().copied().collect();
                 for profiting_candidate in profiting_candidates
@@ -157,7 +157,7 @@ impl SingleTransferableVote
         self.indices = vec![0;self.number_of_votes];
         self.weights = vec![Frac::new(1,1);self.number_of_votes];
         self.remaining_candidates = self.number_of_candidates;
-        self.cutoff = Frac::new(self.number_of_votes as i32,self.candidates_to_elect as i32);
+        self.cutoff = Frac::new(self.number_of_votes as i128, self.candidates_to_elect as i128);
 
         self.is_voted_by = vec![HashSet::new();self.number_of_candidates];
         self.is_voting_for = vec![HashSet::new();self.number_of_votes];
@@ -166,7 +166,7 @@ impl SingleTransferableVote
         for i in 0..self.number_of_votes
         {
             let ballot = &self.ballots[i];
-            let single_weight: Frac = Frac::new(1,ballot[0].len() as i32);
+            let single_weight: Frac = Frac::new(1,ballot[0].len() as i128);
             self.weights[i]=single_weight;
             for candidate in &ballot[0]
             {
