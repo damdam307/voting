@@ -32,7 +32,7 @@ enum ReadingState
     End,
 }
 
-struct ElectionData
+pub struct ElectionData
 {
     pub blt_file: String,
     pub candidate_number: i32,
@@ -57,7 +57,7 @@ fn atoi(s: &str) -> i32
     }
 }
 
-fn parse_blt(file_name: Option<String>) -> ElectionData
+pub fn parse_blt(file_name: Option<String>) -> ElectionData
 {
     let mut candidate_number = 0;
     let mut available_seats = 0;
@@ -90,7 +90,7 @@ fn parse_blt(file_name: Option<String>) -> ElectionData
             continue;
         }
 
-        if read_state == ReadingState::WithdrawnCandidates && line.trim().chars().nth(0)==Some('-') 
+        if read_state == ReadingState::WithdrawnCandidates && line.trim().chars().nth(0)!=Some('-') 
         {
             read_state = ReadingState::Ballots;
         }
@@ -208,7 +208,7 @@ fn parse_blt(file_name: Option<String>) -> ElectionData
                     panic!("Invalid syntax in input file: all candidate names should be fromatted as \"Name\"");
                 }
                 names.push(bits[1].to_string());
-                if bits.len() == candidate_number as usize
+                if names.len() == candidate_number as usize
                 {
                     read_state = ReadingState::Title;
                 }
@@ -232,18 +232,19 @@ fn parse_blt(file_name: Option<String>) -> ElectionData
             }
         }
 
-        if read_state == ReadingState::FirstLine
-        {
-            panic!("Unexpected end of input: input file is empty or consists only of comments");
-        }
-        if read_state == ReadingState::WithdrawnCandidates || read_state == ReadingState::Ballots
-        {
-            panic!("Unexpected end of input: the ballot section must end with a line containing only '0'");
-        }
-        if read_state == ReadingState::CandidateNames
-        {
-            panic!("Unexpected end of input: there must be as many candidate names as there are candidates");
-        }
+    }
+
+    if read_state == ReadingState::FirstLine
+    {
+        panic!("Unexpected end of input: input file is empty or consists only of comments");
+    }
+    if read_state == ReadingState::WithdrawnCandidates || read_state == ReadingState::Ballots
+    {
+        panic!("Unexpected end of input: the ballot section must end with a line containing only '0'");
+    }
+    if read_state == ReadingState::CandidateNames
+    {
+        panic!("Unexpected end of input: there must be as many candidate names as there are candidates");
     }
 
     let mut data = ElectionData {
@@ -256,7 +257,7 @@ fn parse_blt(file_name: Option<String>) -> ElectionData
         names: Vec::new(),
         title: String::new(),
     };
-    blt_file.read_to_string(&mut data.blt_file);
+    let _ = file_name.open().read_to_string(&mut data.blt_file);
     data.candidate_number = candidate_number;
     data.available_seats = available_seats;
     data.withdrawn_candidates = withdrawn_candidates;
