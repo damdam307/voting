@@ -1,12 +1,18 @@
+use fraction::GenericFraction;
+
+pub type FracBase = i128;
+pub type Frac = GenericFraction<FracBase>;
+pub type Ballot = Vec<Vec<usize>>;
 
 pub struct ElectionData
 {
     blt_file: Option<String>,
-    candidate_number: i32,
-    available_seats: i32,
-    withdrawn_candidates: Vec<i32>,
-    ballots: Vec<Vec<Vec<i32>>>,
-    weights: Vec<i32>,
+    candidate_number: usize,
+    available_seats: usize,
+    voters: usize,
+    withdrawn_candidates: Vec<usize>,
+    ballots: Vec<Ballot>,
+    weights: Vec<Frac>,
     names: Option<Vec<String>>,
     title: Option<String>,
 }
@@ -15,11 +21,12 @@ impl ElectionData
 {
     pub fn new(
         blt_file: Option<String>,
-        candidate_number: i32,
-        available_seats: i32,
-        withdrawn_candidates: Vec<i32>,
-        ballots: Vec<Vec<Vec<i32>>>,
-        weights: Vec<i32>,
+        candidate_number: usize,
+        available_seats: usize,
+        voters: usize,
+        withdrawn_candidates: Vec<usize>,
+        ballots: Vec<Ballot>,
+        weights: Vec<Frac>,
         names: Option<Vec<String>>,
         title: Option<String>,
     ) -> Self
@@ -28,6 +35,7 @@ impl ElectionData
             blt_file: blt_file,
             candidate_number: candidate_number,
             available_seats: available_seats,
+            voters: voters,
             withdrawn_candidates: withdrawn_candidates,
             ballots: ballots,
             weights: weights,
@@ -37,12 +45,13 @@ impl ElectionData
     }
 
     pub fn get_blt(&self) -> Option<&str> { self.blt_file.as_deref() }
-    pub fn candidate_number(&self) -> i32 { self.candidate_number }
-    pub fn available_seats(&self) -> i32 { self.available_seats }
-    pub fn withdrawn_candidates(&self) -> Vec<i32> { self.withdrawn_candidates.clone() }
-    pub fn ballots(&self) -> Vec<Vec<Vec<i32>>> { self.ballots.clone() }
-    pub fn weights(&self) -> Vec<i32> { self.weights.clone() }
-    pub fn names(&self) -> Option<Vec<String>> { self.names.clone() }
+    pub fn candidate_number(&self) -> usize { self.candidate_number }
+    pub fn available_seats(&self) -> usize { self.available_seats }
+    pub fn voters(&self) -> usize {self.voters}
+    pub fn withdrawn_candidates(&self) -> &Vec<usize> { &self.withdrawn_candidates }
+    pub fn ballots(&self) -> &Vec<Ballot> { &self.ballots }
+    pub fn weights(&self) -> &Vec<Frac> { &self.weights }
+    pub fn names(&self) -> &Option<Vec<String>> { &self.names }
     pub fn title(&self) -> Option<String> { self.title.clone() }
 
 }

@@ -1,8 +1,9 @@
-
+#[path = "defined_structs.rs"]
+mod defined_structs;
 use std::collections::HashSet;
-use fraction::GenericFraction;
-type Frac = GenericFraction<i128>;
-type Ballot = Vec<Vec<usize>>;
+
+use defined_structs::*;
+
 
 pub enum ResultState
 {
@@ -35,10 +36,7 @@ impl ElectionResult {
 
 pub struct SingleTransferableVote
 {
-    pub ballots: Vec<Vec<Vec<usize>>>, 
-    pub number_of_candidates: usize,
-    pub number_of_votes: usize,
-    pub candidates_to_elect: usize,
+    pub data: ElectionData,
     
     cutoff: Frac,
     
@@ -55,14 +53,11 @@ pub struct SingleTransferableVote
 
 impl SingleTransferableVote
 {
-    pub fn new(ballots: Vec<Ballot>,number_of_candidates: usize,number_of_votes: usize,candidates_to_elect:usize) -> Self
+    pub fn new(data: ElectionData) -> Self
     {
         return SingleTransferableVote
         {
-            ballots: ballots,
-            number_of_candidates: number_of_candidates,
-            number_of_votes: number_of_votes,
-            candidates_to_elect: candidates_to_elect,
+            data: data,
             
             cutoff: Frac::new(0, 1),
             
@@ -72,7 +67,7 @@ impl SingleTransferableVote
             is_out: Vec::new(),
             weights: Vec::new(),
             total_votes: Vec::new(),
-            remaining_candidates: number_of_candidates,
+            remaining_candidates: 0,
             
             results: ElectionResult::new(),
         }
@@ -106,21 +101,21 @@ impl SingleTransferableVote
             else
             {
                 self.indices[voter]+=1;
-                while self.indices[voter]<self.ballots[voter].len()
+                while self.indices[voter]<self.data.ballots()[voter].len()
                 {
                     let mut new_candidates: i32 = 0;
-                    for possible_candidate in &self.ballots[voter][self.indices[voter]]
+                    for possible_candidate in &self.data.ballots()[voter][self.indices[voter]]
                     {
-                        if !self.is_out[*possible_candidate]
+                        if !self.is_out[*possible_candidate as usize]
                         {
                             new_candidates += 1;
                         }
                     }
                     if new_candidates == 0 {self.indices[voter]+=1;continue;}
                     self.weights[voter] *= vote_decay_factor;
-                    self.weights[voter] /= new_candidates as f64;
+                    self.weights[voter] /= new_candidates as FracBase;
                     
-                    let next_candidates: Vec<usize> = self.ballots[voter][self.indices[voter]]
+                    let next_candidates: Vec<usize> = self.data.ballots()[voter][self.indices[voter]]
                         .iter()
                         .copied()
                         .filter(|possible_candidate| !self.is_out[*possible_candidate])
@@ -153,19 +148,24 @@ impl SingleTransferableVote
 
     fn initialise_variables(&mut self)
     {
-        self.is_out = vec![false;self.number_of_candidates];
-        self.indices = vec![0;self.number_of_votes];
-        self.weights = vec![Frac::new(1,1);self.number_of_votes];
-        self.remaining_candidates = self.number_of_candidates;
-        self.cutoff = Frac::new(self.number_of_votes as i128, self.candidates_to_elect as i128);
-
-        self.is_voted_by = vec![HashSet::new();self.number_of_candidates];
-        self.is_voting_for = vec![HashSet::new();self.number_of_votes];
-        self.total_votes = vec![Frac::new(0,1);self.number_of_candidates];
-
-        for i in 0..self.number_of_votes
+        self.is_out = vec![false;self.data.candidate_number() as usize];
+        for candidate in self.data.withdrawn_candidates().clone()
         {
-            let ballot = &self.ballots[i];
+            self.is_out[candidate] = true;
+        }
+
+        self.indices = vec![0;self.data.voters() as usize];
+        self.weights = self.data.weights().clone();
+        self.remaining_candidates = self.data.candidate_number()-self.data.withdrawn_candidates().len();
+        self.cutoff = Frac::new(self.data.voters() as i128, self.data.available_seats() as i128);
+
+        self.is_voted_by = vec![HashSet::new();self.data.candidate_number()];
+        self.is_voting_for = vec![HashSet::new();self.data.voters()];
+        self.total_votes = vec![Frac::new(0,1);self.data.candidate_number()];
+
+        for i in 0..self.data.voters()
+        {
+            let ballot = &self.data.ballots()[i];
             let single_weight: Frac = Frac::new(1,ballot[0].len() as i128);
             self.weights[i]=single_weight;
             for candidate in &ballot[0]
@@ -181,10 +181,10 @@ impl SingleTransferableVote
     {
         self.initialise_variables();
         
-        while self.remaining_candidates>=self.candidates_to_elect && self.results.elected_candidates.len()<self.candidates_to_elect
+        while self.remaining_candidates>=self.data.available_seats() && self.results.elected_candidates.len()<self.data.available_seats()
         {
             let mut have_elected_someone = false;
-            for candidate in 0..self.number_of_candidates
+            for candidate in 0..self.data.candidate_number()
             {
                 if self.is_out[candidate] 
                 {
@@ -205,7 +205,7 @@ impl SingleTransferableVote
 
             let mut min: Frac = self.cutoff;
             let mut least_voted_candidates = Vec::new();
-            for candidate in 0..self.number_of_candidates
+            for candidate in 0..self.data.candidate_number()
             {
                 if self.is_out[candidate] 
                 {
@@ -223,9 +223,9 @@ impl SingleTransferableVote
                 }
             }
 
-            if self.remaining_candidates-least_voted_candidates.len() < self.candidates_to_elect
+            if self.remaining_candidates-least_voted_candidates.len() < self.data.available_seats()
             {
-                if self.remaining_candidates==self.candidates_to_elect
+                if self.remaining_candidates==self.data.available_seats()
                 {
                     for candidate in least_voted_candidates
                     {
@@ -241,7 +241,7 @@ impl SingleTransferableVote
                         self.results.tied_at_interruption.push(candidate);
                         self.is_out[candidate]=true;
                     } 
-                    for candidate in 0..self.number_of_candidates
+                    for candidate in 0..self.data.candidate_number()
                     {
                         if !self.is_out[candidate]
                         {

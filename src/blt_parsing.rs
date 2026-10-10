@@ -2,7 +2,9 @@
 mod defined_structs;
 use std::io::{BufRead, BufReader, Read};
 use std::fs::File;
-use defined_structs::ElectionData;
+
+use defined_structs::*;
+
 trait DefaultToStdin 
 {
     fn open(&self) -> Box<dyn BufRead>;
@@ -35,14 +37,14 @@ enum ReadingState
     End,
 }
 
-fn atoi(s: &str) -> i32
+fn atoi(s: &str) -> usize
 {
     if s == ""
     {
         panic!("Invalid syntax in input file: expected number, got empty string");
     }
 
-    match s.parse::<i32>() {
+    match s.parse::<usize>() {
         Ok(number) => return number,
         Err(_e) => panic!("Invalid syntax in input file: expected number, got non numeric string"),
     }
@@ -50,13 +52,13 @@ fn atoi(s: &str) -> i32
 
 pub fn parse_blt(file_name: Option<String>) -> ElectionData
 {
-    let mut candidate_number = 0;
-    let mut available_seats = 0;
+    let mut candidate_number:usize = 0;
+    let mut available_seats:usize = 0;
 
-    let mut withdrawn_candidates: Vec<i32> = Vec::new();
+    let mut withdrawn_candidates: Vec<usize> = Vec::new();
     
-    let mut ballots: Vec<Vec<Vec<i32>>> = Vec::new();
-    let mut weights: Vec<i32> = Vec::new();
+    let mut ballots: Vec<Ballot> = Vec::new();
+    let mut weights: Vec<Frac> = Vec::new();
 
     let mut names: Vec<String> = Vec::new();
     let mut title: String = "".to_string();
@@ -143,7 +145,7 @@ pub fn parse_blt(file_name: Option<String>) -> ElectionData
                 }
                 let mut finished_ballot:bool = false;
                 let mut read_weight:bool = false;
-                let mut bal: Vec<Vec<i32>> = Vec::new(); 
+                let mut bal: Ballot = Vec::new(); 
                 for text in bits
                 {
                     if finished_ballot
@@ -157,12 +159,12 @@ pub fn parse_blt(file_name: Option<String>) -> ElectionData
                     }
                     if !read_weight
                     {
-                        weights.push(atoi(text));
+                        weights.push(Frac::new(atoi(text) as FracBase,1));
                         read_weight = true;
                         continue;
                     }
                     
-                    let mut pref: Vec<i32> = Vec::new();
+                    let mut pref: Vec<usize> = Vec::new();
                     
                     if text=="-" 
                     {
@@ -241,6 +243,7 @@ pub fn parse_blt(file_name: Option<String>) -> ElectionData
         Some(str),
         candidate_number,
         available_seats,
+        ballots.len(),
         withdrawn_candidates,
         ballots,
         weights,
