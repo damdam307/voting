@@ -1,9 +1,6 @@
-#[path = "defined_structs.rs"]
-mod defined_structs;
 use std::io::{BufRead, BufReader, Read};
 use std::fs::File;
-
-use defined_structs::*;
+use crate::defined_structs::*;
 
 trait DefaultToStdin 
 {
@@ -126,7 +123,7 @@ pub fn parse_blt(file_name: Option<String>) -> ElectionData
                     {
                         panic!("Invalid data in input file: in withdrawn candidates line, one candidate has index bigger than the number of candidates in the race");
                     }
-                    withdrawn_candidates.push(n);
+                    withdrawn_candidates.push(n-1);
                 }
                 read_state = ReadingState::Ballots;
             },
@@ -180,7 +177,7 @@ pub fn parse_blt(file_name: Option<String>) -> ElectionData
                         {
                             panic!("Invalid data in input file: in a ballot, one candidate has index bigger than the number of candidates in the race");
                         }
-                        pref.push(n);
+                        pref.push(n-1);
                     }
                     bal.push(pref);
                 }
