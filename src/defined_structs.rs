@@ -55,3 +55,45 @@ impl ElectionData
     pub fn title(&self) -> Option<String> { self.title.clone() }
 
 }
+
+pub enum ResultState
+{
+    NotRunElection,
+    EveryWinnerAtCutoff,
+    SomeElectedUnderCutoff,
+    StoppedBecauseOfTie,
+    TooFewCandidatesAllElected,
+    TooFewCandidatesSomeUnderCutoff,
+}
+
+pub struct ElectionResult
+{
+    result: ResultState,
+    elected_candidates: Vec<usize>,
+    remaining_elected_candidates: Option<Vec<usize>>,
+    tied_at_interruption: Option<Vec<usize>>
+}
+
+impl ElectionResult {
+    pub fn new(
+        result: ResultState,
+        elected_candidates: Vec<usize>,
+        remaining_elected_candidates: Option<Vec<usize>>,
+        tied_at_interruption: Option<Vec<usize>>
+    ) -> Self
+    {
+        return ElectionResult {
+
+            result: result,
+            elected_candidates: elected_candidates,
+            remaining_elected_candidates: remaining_elected_candidates,
+            tied_at_interruption: tied_at_interruption
+        }
+    }
+
+    pub fn get_result_state(&self) -> &ResultState {&self.result}
+    pub fn elected_candidates(&self) -> &Vec<usize> {&self.elected_candidates}
+    pub fn remaining_elected_candidates(&self) -> &Option<Vec<usize>> {&self.remaining_elected_candidates}
+    pub fn tied_at_interruption(&self) -> &Option<Vec<usize>> {&self.tied_at_interruption}
+
+}

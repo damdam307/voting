@@ -1,38 +1,9 @@
 #[path = "defined_structs.rs"]
 mod defined_structs;
-use std::collections::HashSet;
+use std::{collections::HashSet};
 
 use defined_structs::*;
 
-
-pub enum ResultState
-{
-    NotRunElection,
-    EveryWinnerAtCutoff,
-    SomeElectedUnderCutoff,
-    StoppedBecauseOfTie,
-}
-
-pub struct ElectionResult
-{
-    pub result: ResultState,
-    pub elected_candidates: Vec<usize>,
-    pub remaining_elected_candidates: Vec<usize>,
-    pub tied_at_interruption: Vec<usize>
-}
-
-impl ElectionResult {
-    pub fn new() -> Self
-    {
-        return ElectionResult {
-
-            result: ResultState::NotRunElection,
-            elected_candidates: Vec::new(),
-            remaining_elected_candidates: Vec::new(),
-            tied_at_interruption: Vec::new()
-        }
-    }
-}
 
 pub struct SingleTransferableVote
 {
@@ -69,7 +40,7 @@ impl SingleTransferableVote
             total_votes: Vec::new(),
             remaining_candidates: 0,
             
-            results: ElectionResult::new(),
+            results: ElectionResult::new(ResultState::NotRunElection,Vec::new(),None,None),
         }
     }
 
@@ -141,7 +112,6 @@ impl SingleTransferableVote
     
     fn elect_candidate(&mut self, candidate: usize)
     {
-        self.results.elected_candidates.push(candidate);
         let vote_decay_factor: Frac = (self.total_votes[candidate]-self.cutoff)/(self.total_votes[candidate]);
         self.remove_candidate(candidate, vote_decay_factor);
     }
@@ -180,10 +150,13 @@ impl SingleTransferableVote
     pub fn run_election(&mut self)
     {
         self.initialise_variables();
-        
-        while self.remaining_candidates>=self.data.available_seats() && self.results.elected_candidates.len()<self.data.available_seats()
+        let result: ResultState;
+        let mut elected_candidates: Vec<usize> = Vec::new();
+
+        while elected_candidates.len()<self.data.available_seats()
         {
             let mut have_elected_someone = false;
+            
             for candidate in 0..self.data.candidate_number()
             {
                 if self.is_out[candidate] 
@@ -192,16 +165,17 @@ impl SingleTransferableVote
                 }
                 if self.total_votes[candidate]>= self.cutoff
                 {
+                    elected_candidates.push(candidate);
                     self.elect_candidate(candidate);       
                     have_elected_someone = true;
                     break;
                 }
             }
-
             if have_elected_someone
             {
                 continue;
             }
+
 
             let mut min: Frac = self.cutoff;
             let mut least_voted_candidates = Vec::new();
@@ -225,30 +199,43 @@ impl SingleTransferableVote
 
             if self.remaining_candidates-least_voted_candidates.len() < self.data.available_seats()
             {
-                if self.remaining_candidates==self.data.available_seats()
+                if self.remaining_candidates<=self.data.available_seats()
                 {
-                    for candidate in least_voted_candidates
+                    let mut remaining_elected_candidates = Vec::new();
+                    for candidate in 1..self.data.candidate_number()
                     {
-                        self.results.remaining_elected_candidates.push(candidate);
+                        if !self.is_out[candidate]
+                        {
+                            remaining_elected_candidates.push(candidate);
+                        }
                     }
-                    self.results.result=ResultState::SomeElectedUnderCutoff;
+
+                    result = if self.remaining_candidates==self.data.available_seats() 
+                                {ResultState::SomeElectedUnderCutoff}
+                             else
+                                {ResultState::TooFewCandidatesSomeUnderCutoff};
+                    self.results = ElectionResult::new(result,elected_candidates,Some(remaining_elected_candidates),None);
+
                     return;
                 }
                 else 
                 {
+                    let mut remaining_elected_candidates = Vec::new();
+                    let mut tied_at_interruption: Vec<usize> = Vec::new();
                     for candidate in least_voted_candidates
                     {
-                        self.results.tied_at_interruption.push(candidate);
+                        tied_at_interruption.push(candidate);
                         self.is_out[candidate]=true;
                     } 
                     for candidate in 0..self.data.candidate_number()
                     {
                         if !self.is_out[candidate]
                         {
-                            self.results.remaining_elected_candidates.push(candidate);
+                            remaining_elected_candidates.push(candidate);
                         }
                     }
-                    self.results.result=ResultState::StoppedBecauseOfTie;
+                    result=ResultState::StoppedBecauseOfTie;
+                    self.results = ElectionResult::new(result,elected_candidates,Some(remaining_elected_candidates),Some(tied_at_interruption));
                     return;
                 }
             }
@@ -259,7 +246,12 @@ impl SingleTransferableVote
             }
         }
 
-        self.results.result=ResultState::EveryWinnerAtCutoff;
+        result = if elected_candidates.len() == self.data.available_seats()
+                    {ResultState::EveryWinnerAtCutoff}
+                 else {
+                     ResultState::TooFewCandidatesAllElected
+                 };
+        self.results = ElectionResult::new(result,elected_candidates,None,None);
         return;
     }
 }
