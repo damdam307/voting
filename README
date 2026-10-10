@@ -1,6 +1,6 @@
 # Single Transferable Vote implementation
 
-A simple Rust implementation of the Single Transferable Vote (STV) system.
+A simple Rust implementation of the Single Transferable Vote (STV) system with support for tied candidates.
 
 This repository provides a library and a small example program that run STV elections on a set of ballots.
 
@@ -19,6 +19,10 @@ High-level step for each counting round:
 
 ---
 
+## Input and Ballot generation
+The only ballot format currently supported is the [BLT format](https://opavote.com/help/overview#blt-file-format). Both file and stdin input are supported.
+A simple ballot generator is provided for testing.
+
 ## Possible outcomes
 
 The election result can be one of the following:
@@ -26,14 +30,18 @@ The election result can be one of the following:
 1. Every winner at cutoff: the election completed normally and all elected candidates reached the threshold.
 2. Some elected under cutoff: because some voters did not rank enough candidates, some votes exhausted and not enough candidates could mathematically reach the threshold. In that case, when the number of remaining candidates equals the number of remaining seats, those candidates are marked elected (but with missing votes).
 3. Stopped because of tie: disqualifying all tied last-place candidates would reduce the number of running candidates below the number of seats; the process stops. Candidates with higher votes than the last-place tied candidates are elected (with missing votes) and the tied candidates that caused the interruption are returned as the tied set.
+4. Too few candidates all elected: Same as 1. but there were not enough candidates to fill all the seats
+5. Too few candidates some under cutoff: Same as 2. but there were not enough candidates to fill all the seats
 
 ---
 
 ## important files
 
-- Ballot generation: [ballot_generator.rs](/home/Alessandro/Documents/rust/voting/src/ballot_generator.rs)
-- STV implementation: [voting_system.rs](/home/Alessandro/Documents/rust/voting/src/voting_system.rs)
-- Example entrypoint: [main.rs](/home/Alessandro/Documents/rust/voting/src/main.rs)
+- Ballot generation: [ballot_generator.rs](src/ballot_generator.rs)
+- STV implementation: [voting_system.rs](src/voting_system.rs)
+- Example entrypoint: [main.rs](src/main.rs)
+- Definition of helper structures: [defined_structures.rs](src/defined_structs.rs)
+- Parsing of BLT format: [blt_parsing.rs](src/blt_parsing.rs)
 
 Key result structure (returned by the STV implementation):
 - `result`: enum describing the election outcome. Values include `EveryWinnerAtCutoff`, `SomeElectedUnderCutoff`, `StoppedBecauseOfTie`, and `NotRunElection`.
