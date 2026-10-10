@@ -1,47 +1,52 @@
 mod ballot_generator;
 mod voting_system;
-mod blt_parsing;
-mod defined_structs;
 
-use blt_parsing::parse_blt;
+use ballot_generator::create_n_ballots;
+use voting_system::SingleTransferableVote;
+use voting_system::ResultState;
 
 fn main() {
-    
-    let election = parse_blt(Some("../votes.blt".to_string()));
+    let candidates:usize = 500;
+    let voters:usize = 30000;
+    let seats:usize = 10;
 
-    print!("{}",election.candidate_number);
+    let mut election:SingleTransferableVote = SingleTransferableVote::new(
+        create_n_ballots(
+            voters, 
+            candidates, 
+            0.1, 
+            0.0
+        ),
+        candidates,
+        voters,
+        seats
+    );
 
-    // let candidates:usize = 500;
-    // let voters:usize = 30000;
-    // let seats:usize = 10;
+    election.run_election();
 
-    
-
-    // election.run_election();
-
-    // if matches!(election.results.result, ResultState::EveryWinnerAtCutoff) {
-    //     println!("Full election: {:?}", election.results.elected_candidates);
-    // } else if matches!(election.results.result, ResultState::SomeElectedUnderCutoff) {
-    //     println!(
-    //         "Partial election: {:?}",
-    //         election.results.elected_candidates
-    //     );
-    //     println!(
-    //         "Remaining seats: {:?}",
-    //         election.results.remaining_elected_candidates
-    //     );
-    // } else if matches!(election.results.result, ResultState::StoppedBecauseOfTie) {
-    //     println!(
-    //         "Fully elected: {:?}",
-    //         election.results.elected_candidates
-    //     );
-    //     println!(
-    //         "Would have been elected: {:?}",
-    //         election.results.remaining_elected_candidates
-    //     );
-    //     println!(
-    //         "Tied: {:?}",
-    //         election.results.tied_at_interruption
-    //     );
-    // }
+    if matches!(election.results.result, ResultState::EveryWinnerAtCutoff) {
+        println!("Full election: {:?}", election.results.elected_candidates);
+    } else if matches!(election.results.result, ResultState::SomeElectedUnderCutoff) {
+        println!(
+            "Partial election: {:?}",
+            election.results.elected_candidates
+        );
+        println!(
+            "Remaining seats: {:?}",
+            election.results.remaining_elected_candidates
+        );
+    } else if matches!(election.results.result, ResultState::StoppedBecauseOfTie) {
+        println!(
+            "Fully elected: {:?}",
+            election.results.elected_candidates
+        );
+        println!(
+            "Would have been elected: {:?}",
+            election.results.remaining_elected_candidates
+        );
+        println!(
+            "Tied: {:?}",
+            election.results.tied_at_interruption
+        );
+    }
 }
