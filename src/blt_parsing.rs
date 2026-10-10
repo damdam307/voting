@@ -1,5 +1,9 @@
+#[path = "defined_structs.rs"]
+mod defined_structs;
+use std::default;
 use std::io::{BufRead, BufReader, Read};
 use std::fs::File;
+use defined_structs::ElectionData;
 trait DefaultToStdin 
 {
     fn open(&self) -> Box<dyn BufRead>;
@@ -30,18 +34,6 @@ enum ReadingState
     CandidateNames,
     Title,
     End,
-}
-
-pub struct ElectionData
-{
-    pub blt_file: String,
-    pub candidate_number: i32,
-    pub available_seats: i32,
-    pub withdrawn_candidates: Vec<i32>,
-    pub ballots: Vec<Vec<Vec<i32>>>,
-    pub weights: Vec<i32>,
-    pub names: Vec<String>,
-    pub title: String,
 }
 
 fn atoi(s: &str) -> i32
@@ -85,6 +77,7 @@ pub fn parse_blt(file_name: Option<String>) -> ElectionData
             } 
         }
 
+        // skip comments
         if line.trim().chars().nth(0)==Some('#') 
         {
             continue;
@@ -234,36 +227,25 @@ pub fn parse_blt(file_name: Option<String>) -> ElectionData
 
     }
 
-    if read_state == ReadingState::FirstLine
+    match read_state
     {
-        panic!("Unexpected end of input: input file is empty or consists only of comments");
-    }
-    if read_state == ReadingState::WithdrawnCandidates || read_state == ReadingState::Ballots
-    {
-        panic!("Unexpected end of input: the ballot section must end with a line containing only '0'");
-    }
-    if read_state == ReadingState::CandidateNames
-    {
-        panic!("Unexpected end of input: there must be as many candidate names as there are candidates");
+        ReadingState::FirstLine => {panic!("Unexpected end of input: input file is empty or consists only of comments");}
+        ReadingState::WithdrawnCandidates => {panic!("Unexpected end of input: the ballot section must end with a line containing only '0'");}
+        ReadingState::CandidateNames => {panic!("Unexpected end of input: there must be as many candidate names as there are candidates");}
+        _ => {}
     }
 
-    let mut data = ElectionData {
-        blt_file: String::new(),
-        candidate_number: 0,
-        available_seats: 0,
-        withdrawn_candidates: Vec::new(),
-        ballots: Vec::new(),
-        weights: Vec::new(),
-        names: Vec::new(),
-        title: String::new(),
-    };
-    let _ = file_name.open().read_to_string(&mut data.blt_file);
-    data.candidate_number = candidate_number;
-    data.available_seats = available_seats;
-    data.withdrawn_candidates = withdrawn_candidates;
-    data.ballots = ballots;
-    data.weights = weights;
-    data.names = names;
-    data.title = title;
-    return data;
+    let mut str:String = String::new();
+    let _ = file_name.open().read_to_string(&mut str);
+
+    return ElectionData::new(
+        Some(str),
+        candidate_number,
+        available_seats,
+        withdrawn_candidates,
+        ballots,
+        weights,
+        Some(names),
+        Some(title)
+    );
 }
