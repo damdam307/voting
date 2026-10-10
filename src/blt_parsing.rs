@@ -1,6 +1,5 @@
 #[path = "defined_structs.rs"]
 mod defined_structs;
-use std::default;
 use std::io::{BufRead, BufReader, Read};
 use std::fs::File;
 use defined_structs::ElectionData;
