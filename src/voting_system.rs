@@ -1,8 +1,6 @@
-#[path = "defined_structs.rs"]
-mod defined_structs;
-use std::{collections::HashSet};
 
-use defined_structs::*;
+use std::{collections::HashSet};
+use crate::defined_structs::*;
 
 
 pub struct SingleTransferableVote
@@ -119,14 +117,16 @@ impl SingleTransferableVote
     fn initialise_variables(&mut self)
     {
         self.is_out = vec![false;self.data.candidate_number() as usize];
-        for candidate in self.data.withdrawn_candidates().clone()
+        self.remaining_candidates = self.data.candidate_number();
+
+        for candidate in self.data.withdrawn_candidates().clone().unwrap_or(vec![])
         {
             self.is_out[candidate] = true;
+            self.remaining_candidates-=1;
         }
 
         self.indices = vec![0;self.data.voters() as usize];
         self.weights = self.data.weights().clone();
-        self.remaining_candidates = self.data.candidate_number()-self.data.withdrawn_candidates().len();
         self.cutoff = Frac::new(self.data.voters() as i128, self.data.available_seats() as i128);
 
         self.is_voted_by = vec![HashSet::new();self.data.candidate_number()];
@@ -153,7 +153,7 @@ impl SingleTransferableVote
         let result: ResultState;
         let mut elected_candidates: Vec<usize> = Vec::new();
 
-        while elected_candidates.len()<self.data.available_seats()
+        while self.remaining_candidates>elected_candidates.len() && elected_candidates.len()<self.data.available_seats()
         {
             let mut have_elected_someone = false;
             

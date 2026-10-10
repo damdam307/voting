@@ -1,5 +1,6 @@
+use crate::defined_structs::*;
 use rand::prelude::*;
-type Ballot = Vec<Vec<usize>>;
+
 
 /// Generates a ballot in the following way:
 /// A vector with all the indices of the electable candidates is shuffled
@@ -50,9 +51,9 @@ fn create_ballot(candidate_number: usize, tie_probability: f64, incomplete_proba
 /// * `incomplete_probability` - the probability that not all candidates have a rank (see create_ballot)
 /// # Returns
 /// A vector containing N ballots
-pub fn create_n_ballots(voter_number: usize, candidate_number: usize, tie_probability: f64, incomplete_probability: f64) -> Vec<Vec<Vec<usize>>>
+pub fn create_n_ballots(voter_number: usize, candidate_number: usize, tie_probability: f64, incomplete_probability: f64) -> Vec<Ballot>
 {
-    let mut ballots: Vec<Vec<Vec<usize>>> = Vec::new();
+    let mut ballots: Vec<Ballot> = Vec::new();
     
     for _i in 0..voter_number
     {

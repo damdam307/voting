@@ -10,7 +10,7 @@ pub struct ElectionData
     candidate_number: usize,
     available_seats: usize,
     voters: usize,
-    withdrawn_candidates: Vec<usize>,
+    withdrawn_candidates: Option<Vec<usize>>,
     ballots: Vec<Ballot>,
     weights: Vec<Frac>,
     names: Option<Vec<String>>,
@@ -24,7 +24,7 @@ impl ElectionData
         candidate_number: usize,
         available_seats: usize,
         voters: usize,
-        withdrawn_candidates: Vec<usize>,
+        withdrawn_candidates: Option<Vec<usize>>,
         ballots: Vec<Ballot>,
         weights: Vec<Frac>,
         names: Option<Vec<String>>,
@@ -48,7 +48,7 @@ impl ElectionData
     pub fn candidate_number(&self) -> usize { self.candidate_number }
     pub fn available_seats(&self) -> usize { self.available_seats }
     pub fn voters(&self) -> usize {self.voters}
-    pub fn withdrawn_candidates(&self) -> &Vec<usize> { &self.withdrawn_candidates }
+    pub fn withdrawn_candidates(&self) -> &Option<Vec<usize>> { &self.withdrawn_candidates }
     pub fn ballots(&self) -> &Vec<Ballot> { &self.ballots }
     pub fn weights(&self) -> &Vec<Frac> { &self.weights }
     pub fn names(&self) -> &Option<Vec<String>> { &self.names }

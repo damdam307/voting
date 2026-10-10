@@ -236,15 +236,18 @@ pub fn parse_blt(file_name: Option<String>) -> ElectionData
     let mut str:String = String::new();
     let _ = file_name.open().read_to_string(&mut str);
 
+    let opt_wc: Option<Vec<usize>> = if withdrawn_candidates.is_empty() {None} else {Some(withdrawn_candidates)};
+    let opt_title: Option<String> = if read_state==ReadingState::End {Some(title)} else {None};
+
     return ElectionData::new(
         Some(str),
         candidate_number,
         available_seats,
         ballots.len(),
-        withdrawn_candidates,
+        opt_wc,
         ballots,
         weights,
         Some(names),
-        Some(title)
+        opt_title
     );
 }
