@@ -3,32 +3,59 @@ mod voting_system;
 mod defined_structs;
 mod blt_parsing;
 
+use clap::Parser;
 use ballot_generator::create_n_ballots;
 use voting_system::SingleTransferableVote;
 use defined_structs::*;
 
-fn main() {
-    let candidates:usize = 10;
-    let voters:usize = 100;
-    let seats:usize = 3;
+use crate::blt_parsing::parse_blt;
 
-    let mut election:SingleTransferableVote = SingleTransferableVote::new(
-        ElectionData::new(
-            None, 
-            candidates, 
-            seats, 
-            voters, 
-            None, 
-            create_n_ballots(
-            voters, 
-            candidates, 
-            0.1, 
-            0.1
-            ), 
-            vec![Frac::new(1,0);voters], 
-            None, 
-            None)
-    );
+#[derive(Parser)]
+struct Args 
+{
+    #[arg(short,long,exclusive(true))]
+    input_blt: Option<String>,
+    #[arg(short,long,required_unless_present="input_blt")]
+    votes: Option<usize>,
+    #[arg(short,long,required_unless_present="input_blt")]
+    candidates: Option<usize>,
+    #[arg(short,long,required_unless_present="input_blt")]
+    seats: Option<usize>,
+    #[arg(short,long,default_value_t = 0.0)]
+    partial_ballot_probability: f64,
+    #[arg(short,long,default_value_t = 0.0)]
+    tied_candidates_probability: f64,
+}
+
+fn main() {
+
+    let args = Args::parse();
+
+    let mut election:SingleTransferableVote;
+    if args.input_blt.is_none()
+    {
+        election = SingleTransferableVote::new(
+            ElectionData::new(
+                None, 
+                args.candidates.unwrap_or(0), 
+                args.seats.unwrap_or(0), 
+                args.votes.unwrap_or(0), 
+                None, 
+                create_n_ballots(
+                args.votes.unwrap_or(0), 
+                args.candidates.unwrap_or(0), 
+                args.tied_candidates_probability, 
+                args.partial_ballot_probability,
+                ), 
+                vec![Frac::new(1,0);args.votes.unwrap_or(0)], 
+                None, 
+                None)
+        );
+    }
+    else 
+    {
+        election = SingleTransferableVote::new(parse_blt(args.input_blt));
+    }
 
     election.run_election();
 
