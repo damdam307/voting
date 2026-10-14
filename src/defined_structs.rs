@@ -97,3 +97,21 @@ impl ElectionResult {
     pub fn tied_at_interruption(&self) -> &Option<Vec<usize>> {&self.tied_at_interruption}
 
 }
+
+use clap::Parser;
+#[derive(Parser)]
+pub struct Args 
+{
+    #[arg(short,long,exclusive(true))]
+    pub input_blt: Option<String>,
+    #[arg(short,long,required_unless_present="input_blt")]
+    pub votes: Option<usize>,
+    #[arg(short,long,required_unless_present="input_blt")]
+    pub candidates: Option<usize>,
+    #[arg(short,long,required_unless_present="input_blt")]
+    pub seats: Option<usize>,
+    #[arg(short,long,default_value_t = 0.0)]
+    pub partial_ballot_probability: f64,
+    #[arg(short,long,default_value_t = 0.0)]
+    pub tied_candidates_probability: f64,
+}

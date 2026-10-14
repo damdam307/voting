@@ -7,25 +7,8 @@ use clap::Parser;
 use ballot_generator::create_n_ballots;
 use voting_system::SingleTransferableVote;
 use defined_structs::*;
+use blt_parsing::parse_blt;
 
-use crate::blt_parsing::parse_blt;
-
-#[derive(Parser)]
-struct Args 
-{
-    #[arg(short,long,exclusive(true))]
-    input_blt: Option<String>,
-    #[arg(short,long,required_unless_present="input_blt")]
-    votes: Option<usize>,
-    #[arg(short,long,required_unless_present="input_blt")]
-    candidates: Option<usize>,
-    #[arg(short,long,required_unless_present="input_blt")]
-    seats: Option<usize>,
-    #[arg(short,long,default_value_t = 0.0)]
-    partial_ballot_probability: f64,
-    #[arg(short,long,default_value_t = 0.0)]
-    tied_candidates_probability: f64,
-}
 
 fn main() {
 
